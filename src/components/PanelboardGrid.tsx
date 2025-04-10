@@ -1,4 +1,5 @@
-import React, { useState, useRef, useCallback, useMemo } from 'react';
+
+import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
 import 'ag-grid-community/styles/ag-theme-alpine.css';
@@ -9,7 +10,8 @@ import {
   ColumnApi, 
   MenuItemDef,
   ColGroupDef,
-  CellValueChangedEvent
+  CellValueChangedEvent,
+  ValueFormatterParams
 } from 'ag-grid-community';
 import { LicenseManager } from 'ag-grid-enterprise';
 import { Button } from "@/components/ui/button";
@@ -27,6 +29,19 @@ const PanelboardGrid: React.FC = () => {
   const [columnApi, setColumnApi] = useState<ColumnApi | null>(null);
   const [quickFilter, setQuickFilter] = useState('');
   const [rowData, setRowData] = useState(panelboardData);
+  const [totalPrice, setTotalPrice] = useState(0);
+  
+  // Calculate total price whenever row data changes
+  useEffect(() => {
+    if (rowData) {
+      const total = rowData.reduce((sum, row) => {
+        const quantity = row.quantity || 0;
+        const price = row.price || 0;
+        return sum + (quantity * price);
+      }, 0);
+      setTotalPrice(total);
+    }
+  }, [rowData]);
   
   // Define default columns
   const [columnDefs, setColumnDefs] = useState<(ColDef | ColGroupDef)[]>([
@@ -77,10 +92,15 @@ const PanelboardGrid: React.FC = () => {
       filter: 'agNumberColumnFilter',
       flex: 1,
       editable: true,
+      cellStyle: { backgroundColor: '#f0f8ff' }, // Light blue background to indicate editable
       cellEditor: 'agNumberCellEditor',
       cellEditorParams: {
         min: 0,
         max: 1000
+      },
+      singleClickEdit: true, // Enable single-click editing
+      valueFormatter: (params: ValueFormatterParams) => {
+        return params.value === 0 ? '' : params.value;
       }
     },
     { 
@@ -89,6 +109,21 @@ const PanelboardGrid: React.FC = () => {
       sortable: true, 
       filter: 'agNumberColumnFilter',
       flex: 1,
+      valueFormatter: (params: any) => {
+        return params.value ? `$${params.value.toFixed(2)}` : '';
+      }
+    },
+    { 
+      headerName: 'Total ($)', 
+      field: 'total',
+      sortable: true, 
+      filter: 'agNumberColumnFilter',
+      flex: 1,
+      valueGetter: (params: any) => {
+        const quantity = params.data.quantity || 0;
+        const price = params.data.price || 0;
+        return quantity * price;
+      },
       valueFormatter: (params: any) => {
         return params.value ? `$${params.value.toFixed(2)}` : '';
       }
@@ -123,9 +158,18 @@ const PanelboardGrid: React.FC = () => {
   // Handle cell value changes
   const onCellValueChanged = (event: CellValueChangedEvent) => {
     if (event.colDef.field === 'quantity') {
+      // Update the row data with the new quantity
+      const updatedRowData = rowData.map(row => {
+        if (row.productCode === event.data.productCode) {
+          return { ...row, quantity: event.newValue };
+        }
+        return row;
+      });
+      setRowData(updatedRowData);
+      
       toast({
         title: "Quantity Updated",
-        description: `${event.data.description}: Quantity changed from ${event.oldValue} to ${event.newValue}`,
+        description: `${event.data.description}: Quantity changed from ${event.oldValue || 0} to ${event.newValue}`,
       });
     }
   };
@@ -284,10 +328,15 @@ const PanelboardGrid: React.FC = () => {
           suppressRowClickSelection={true}
           pagination={true}
           paginationPageSize={15}
+          paginationPageSizeSelector={[10, 15, 25, 50]}
           domLayout="autoHeight"
-          editType="fullRow"
           onCellValueChanged={onCellValueChanged}
         />
+      </div>
+      
+      <div className="mt-4 flex justify-end items-center p-2 bg-gray-100 rounded">
+        <div className="font-bold mr-2">Total:</div>
+        <div className="text-lg">${totalPrice.toFixed(2)}</div>
       </div>
     </div>
   );
