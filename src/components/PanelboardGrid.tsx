@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -356,15 +355,15 @@ const PanelboardGrid: React.FC = () => {
         // Update active filter state
         setActiveFilter(categoryId);
         
-        // Apply filter to show only items of this category's type
-        const filterInstances = gridApi.getFilterInstance('type');
-        if (filterInstances) {
-          filterInstances.setModel({
-            type: 'equals',
-            filter: category.filterValue
-          });
-          gridApi.onFilterChanged();
-        }
+        // Apply filter to show only items of this category's type using the updated API
+        // Use setColumnFilterModel instead of the deprecated getFilterInstance
+        gridApi.setColumnFilterModel('type', {
+          type: 'equals',
+          filter: category.filterValue
+        });
+        
+        // Log for debugging
+        console.log(`Filtering for category: ${category.name}, type: ${category.filterValue}`);
         
         // Find the row index for the category header
         const rowNodes: any[] = [];
