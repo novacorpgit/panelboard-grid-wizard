@@ -9,18 +9,25 @@ import {
   GridApi, 
   ColumnApi, 
   MenuItemDef,
-  ColGroupDef
+  ColGroupDef,
+  CellValueChangedEvent,
+  LicenseManager
 } from 'ag-grid-community';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { panelboardData } from '@/data/sampleData';
 import { Badge } from "@/components/ui/badge";
+import { toast } from "@/components/ui/use-toast";
+
+// Set the AG Grid Enterprise license key
+LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-078795}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{30 April 2025}____[v3]_[0102]_MTc0NTk2NzYwMDAwMA==39b1546fe2d969966a31bbc6b46371db");
 
 const PanelboardGrid: React.FC = () => {
   const gridRef = useRef<AgGridReact>(null);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [columnApi, setColumnApi] = useState<ColumnApi | null>(null);
   const [quickFilter, setQuickFilter] = useState('');
+  const [rowData, setRowData] = useState(panelboardData);
   
   // Define default columns
   const [columnDefs, setColumnDefs] = useState<(ColDef | ColGroupDef)[]>([
@@ -69,7 +76,13 @@ const PanelboardGrid: React.FC = () => {
       field: 'quantity', 
       sortable: true, 
       filter: 'agNumberColumnFilter',
-      flex: 1
+      flex: 1,
+      editable: true,
+      cellEditor: 'agNumberCellEditor',
+      cellEditorParams: {
+        min: 0,
+        max: 1000
+      }
     },
     { 
       headerName: 'Price ($)', 
@@ -106,6 +119,16 @@ const PanelboardGrid: React.FC = () => {
     setGridApi(params.api);
     setColumnApi(params.columnApi);
     params.api.sizeColumnsToFit();
+  };
+
+  // Handle cell value changes
+  const onCellValueChanged = (event: CellValueChangedEvent) => {
+    if (event.colDef.field === 'quantity') {
+      toast({
+        title: "Quantity Updated",
+        description: `${event.data.description}: Quantity changed from ${event.oldValue} to ${event.newValue}`,
+      });
+    }
   };
 
   // Handle quick filter changes
@@ -251,7 +274,7 @@ const PanelboardGrid: React.FC = () => {
       <div className="flex-grow h-[70vh] w-full ag-theme-alpine">
         <AgGridReact
           ref={gridRef}
-          rowData={panelboardData}
+          rowData={rowData}
           columnDefs={columnDefs}
           defaultColDef={defaultColDef}
           onGridReady={onGridReady}
@@ -263,6 +286,8 @@ const PanelboardGrid: React.FC = () => {
           pagination={true}
           paginationPageSize={15}
           domLayout="autoHeight"
+          editType="fullRow"
+          onCellValueChanged={onCellValueChanged}
         />
       </div>
     </div>
