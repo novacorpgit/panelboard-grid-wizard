@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -10,9 +9,9 @@ import {
   ColumnApi, 
   MenuItemDef,
   ColGroupDef,
-  CellValueChangedEvent,
-  LicenseManager
+  CellValueChangedEvent
 } from 'ag-grid-community';
+import { LicenseManager } from 'ag-grid-enterprise';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { panelboardData } from '@/data/sampleData';
