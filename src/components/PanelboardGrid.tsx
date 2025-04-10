@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -20,7 +19,7 @@ import { Input } from "@/components/ui/input";
 import { panelboardData } from '@/data/sampleData';
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
-import { CircuitBoard, Shield, Link, Switch, AlertTriangle, Clock, CircleDot } from 'lucide-react';
+import { CircuitBoard, Shield, Link, ToggleLeft, AlertTriangle, Clock, CircleDot } from 'lucide-react';
 
 // Set the AG Grid Enterprise license key
 LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-078795}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{30 April 2025}____[v3]_[0102]_MTc0NTk2NzYwMDAwMA==39b1546fe2d969966a31bbc6b46371db");
@@ -302,7 +301,7 @@ const PanelboardGrid: React.FC = () => {
     { id: 'circuit-breakers', name: 'Circuit Breakers', icon: <CircuitBoard className="mr-2" size={16} /> },
     { id: 'rcd', name: 'RCDs', icon: <Shield className="mr-2" size={16} /> },
     { id: 'fuse-links', name: 'Fuse Links', icon: <Link className="mr-2" size={16} /> },
-    { id: 'contactors', name: 'Contactors', icon: <Switch className="mr-2" size={16} /> },
+    { id: 'contactors', name: 'Contactors', icon: <ToggleLeft className="mr-2" size={16} /> },
     { id: 'overload-relays', name: 'Relays', icon: <AlertTriangle className="mr-2" size={16} /> },
     { id: 'timers', name: 'Timers', icon: <Clock className="mr-2" size={16} /> },
     { id: 'push-buttons', name: 'Buttons & Switches', icon: <CircleDot className="mr-2" size={16} /> }
