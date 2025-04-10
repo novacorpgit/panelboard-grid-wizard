@@ -9,8 +9,7 @@ import {
   ColumnApi, 
   MenuItemDef,
   ColGroupDef,
-  CellValueChangedEvent,
-  ValueFormatterParams
+  CellValueChangedEvent
 } from 'ag-grid-community';
 import { LicenseManager } from 'ag-grid-enterprise';
 import { Button } from "@/components/ui/button";
@@ -27,39 +26,7 @@ const PanelboardGrid: React.FC = () => {
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [columnApi, setColumnApi] = useState<ColumnApi | null>(null);
   const [quickFilter, setQuickFilter] = useState('');
-  
-  // Transform data for tree structure
-  const rowData = useMemo(() => {
-    // Group data by type
-    const typeGroups: Record<string, any> = {};
-    
-    panelboardData.forEach(item => {
-      if (!typeGroups[item.type]) {
-        typeGroups[item.type] = {
-          productCode: item.type,
-          description: `${item.type} Components`,
-          type: 'Group',
-          children: []
-        };
-      }
-      
-      // Create a copy of the item with blank quantity
-      const itemCopy = {...item};
-      itemCopy.quantity = null; // Make quantity blank initially
-      typeGroups[item.type].children.push(itemCopy);
-    });
-    
-    // Convert to array for grid
-    return Object.values(typeGroups);
-  }, []);
-  
-  // Calculate totals
-  const [totals, setTotals] = useState({
-    totalItems: 0,
-    totalPrice: 0,
-    totalLabor: 0,
-    grandTotal: 0
-  });
+  const [rowData, setRowData] = useState(panelboardData);
   
   // Define default columns
   const [columnDefs, setColumnDefs] = useState<(ColDef | ColGroupDef)[]>([
@@ -70,8 +37,7 @@ const PanelboardGrid: React.FC = () => {
       filter: true, 
       checkboxSelection: true,
       headerCheckboxSelection: true,
-      pinned: 'left',
-      cellRenderer: 'agGroupCellRenderer'
+      pinned: 'left'
     },
     { 
       headerName: 'Description', 
@@ -87,7 +53,6 @@ const PanelboardGrid: React.FC = () => {
       filter: true,
       flex: 1,
       cellRenderer: (params: any) => {
-        if (params.value === 'Group') return null;
         return <Badge variant="outline">{params.value}</Badge>;
       }
     },
@@ -116,12 +81,6 @@ const PanelboardGrid: React.FC = () => {
       cellEditorParams: {
         min: 0,
         max: 1000
-      },
-      valueFormatter: (params: ValueFormatterParams) => {
-        if (params.value === 0 || params.value === null || params.value === undefined) {
-          return '';
-        }
-        return params.value;
       }
     },
     { 
@@ -143,26 +102,6 @@ const PanelboardGrid: React.FC = () => {
       valueFormatter: (params: any) => {
         return params.value ? `$${params.value.toFixed(2)}` : '';
       }
-    },
-    {
-      headerName: 'Total ($)', 
-      field: 'total',
-      sortable: true,
-      filter: 'agNumberColumnFilter',
-      flex: 1,
-      valueGetter: (params: any) => {
-        if (params.data.type === 'Group') return null;
-        const qty = params.data.quantity || 0;
-        const price = params.data.price || 0;
-        const labor = params.data.laborCharge || 0;
-        return qty * (price + labor);
-      },
-      valueFormatter: (params: any) => {
-        if (params.value) {
-          return `$${params.value.toFixed(2)}`;
-        }
-        return '';
-      }
     }
   ]);
 
@@ -175,50 +114,10 @@ const PanelboardGrid: React.FC = () => {
     flex: 1,
   }), []);
 
-  // Configure tree data
-  const autoGroupColumnDef = useMemo(() => ({
-    headerName: 'Component Group',
-    minWidth: 250,
-    cellRendererParams: {
-      suppressCount: false,
-    },
-  }), []);
-
-  // This is the crucial function for tree data to work
-  const getDataPath = useCallback((data: any) => {
-    return data.type === 'Group' ? [data.productCode] : [data.type, data.productCode];
-  }, []);
-
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
     setColumnApi(params.columnApi);
     params.api.sizeColumnsToFit();
-    
-    // Initial calculation of totals
-    calculateTotals(params.api);
-  };
-
-  // Calculate totals from grid data
-  const calculateTotals = (api: GridApi | null) => {
-    if (!api) return;
-    
-    let totalItems = 0;
-    let totalPrice = 0;
-    let totalLabor = 0;
-    
-    api.forEachLeafNode(node => {
-      const qty = node.data.quantity || 0;
-      totalItems += qty;
-      totalPrice += qty * (node.data.price || 0);
-      totalLabor += qty * (node.data.laborCharge || 0);
-    });
-    
-    setTotals({
-      totalItems,
-      totalPrice,
-      totalLabor,
-      grandTotal: totalPrice + totalLabor
-    });
   };
 
   // Handle cell value changes
@@ -226,11 +125,8 @@ const PanelboardGrid: React.FC = () => {
     if (event.colDef.field === 'quantity') {
       toast({
         title: "Quantity Updated",
-        description: `${event.data.description}: Quantity changed from ${event.oldValue || 0} to ${event.newValue || 0}`,
+        description: `${event.data.description}: Quantity changed from ${event.oldValue} to ${event.newValue}`,
       });
-      
-      // Recalculate totals
-      calculateTotals(gridApi);
     }
   };
 
@@ -391,33 +287,7 @@ const PanelboardGrid: React.FC = () => {
           domLayout="autoHeight"
           editType="fullRow"
           onCellValueChanged={onCellValueChanged}
-          autoGroupColumnDef={autoGroupColumnDef}
-          groupDefaultExpanded={1}
-          treeData={true}
-          getDataPath={getDataPath}
         />
-      </div>
-      
-      {/* Totals display */}
-      <div className="mt-4 p-4 border rounded-md bg-gray-50">
-        <div className="grid grid-cols-4 gap-4">
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500">Total Items</h3>
-            <p className="text-lg font-bold">{totals.totalItems}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500">Total Price</h3>
-            <p className="text-lg font-bold">${totals.totalPrice.toFixed(2)}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500">Total Labor</h3>
-            <p className="text-lg font-bold">${totals.totalLabor.toFixed(2)}</p>
-          </div>
-          <div>
-            <h3 className="text-sm font-semibold text-gray-500">Grand Total</h3>
-            <p className="text-lg font-bold text-green-600">${totals.grandTotal.toFixed(2)}</p>
-          </div>
-        </div>
       </div>
     </div>
   );
