@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -39,6 +40,7 @@ const PanelboardGrid: React.FC = () => {
   const [quickFilter, setQuickFilter] = useState('');
   const [rowData, setRowData] = useState<any[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  const [activeFilter, setActiveFilter] = useState<string | null>(null);
   
   // Define categories
   const categories: CategoryData[] = [
@@ -341,28 +343,68 @@ const PanelboardGrid: React.FC = () => {
     );
   };
 
-  // Navigate to a specific category
+  // Navigate to a specific category and filter data
   const navigateToCategory = (categoryId: string) => {
     if (gridApi) {
-      // Find the row index for the category
-      const rowNodes: any[] = [];
-      gridApi.forEachNode((node) => rowNodes.push(node));
+      // Reset any existing filters first
+      gridApi.setFilterModel(null);
       
-      const categoryIndex = rowNodes.findIndex(node => 
-        node.data && node.data.id === categoryId
-      );
+      // Find the category information
+      const category = categories.find(cat => cat.id === categoryId);
       
-      if (categoryIndex >= 0) {
-        // Navigate to the category row
-        gridApi.ensureIndexVisible(categoryIndex);
+      if (category) {
+        // Update active filter state
+        setActiveFilter(categoryId);
         
-        // Highlight the row (optional)
-        gridApi.clearFocusedCell();
+        // Apply filter to show only items of this category's type
+        const filterInstances = gridApi.getFilterInstance('type');
+        if (filterInstances) {
+          filterInstances.setModel({
+            type: 'equals',
+            filter: category.filterValue
+          });
+          gridApi.onFilterChanged();
+        }
         
-        // Optionally select the row
-        gridApi.deselectAll();
-        gridApi.getDisplayedRowAtIndex(categoryIndex)?.setSelected(true);
+        // Find the row index for the category header
+        const rowNodes: any[] = [];
+        gridApi.forEachNode((node) => rowNodes.push(node));
+        
+        const categoryIndex = rowNodes.findIndex(node => 
+          node.data && node.data.id === categoryId
+        );
+        
+        if (categoryIndex >= 0) {
+          // Navigate to the category row
+          gridApi.ensureIndexVisible(categoryIndex);
+          
+          // Highlight the row (optional)
+          gridApi.clearFocusedCell();
+          
+          // Optionally select the row
+          gridApi.deselectAll();
+          gridApi.getDisplayedRowAtIndex(categoryIndex)?.setSelected(true);
+          
+          // Show success toast
+          toast({
+            title: `Filtered to ${category.name}`,
+            description: `Showing ${category.filterValue} type components`,
+          });
+        }
       }
+    }
+  };
+  
+  // Reset all filters
+  const resetFilters = () => {
+    if (gridApi) {
+      gridApi.setFilterModel(null);
+      setActiveFilter(null);
+      gridApi.onFilterChanged();
+      toast({
+        title: "Filters Reset",
+        description: "Showing all components",
+      });
     }
   };
 
@@ -373,7 +415,7 @@ const PanelboardGrid: React.FC = () => {
           {navigationCategories.map((category) => (
             <Button
               key={category.id}
-              variant="outline"
+              variant={activeFilter === category.id ? "default" : "outline"}
               className="flex items-center"
               onClick={() => navigateToCategory(category.id)}
             >
@@ -381,6 +423,15 @@ const PanelboardGrid: React.FC = () => {
               {category.name}
             </Button>
           ))}
+          {activeFilter && (
+            <Button
+              variant="ghost"
+              className="flex items-center"
+              onClick={resetFilters}
+            >
+              Show All
+            </Button>
+          )}
         </div>
         <div className="w-64">
           <Input
