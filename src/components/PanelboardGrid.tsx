@@ -11,7 +11,8 @@ import {
   MenuItemDef,
   ColGroupDef,
   CellValueChangedEvent,
-  ValueFormatterParams
+  ValueFormatterParams,
+  IsFullWidthRowParams
 } from 'ag-grid-community';
 import { LicenseManager } from 'ag-grid-enterprise';
 import { Button } from "@/components/ui/button";
@@ -19,22 +20,69 @@ import { Input } from "@/components/ui/input";
 import { panelboardData } from '@/data/sampleData';
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
+import { CircuitBoard, Shield, Link, Switch, AlertTriangle, Clock, CircleDot } from 'lucide-react';
 
 // Set the AG Grid Enterprise license key
 LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-078795}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{30 April 2025}____[v3]_[0102]_MTc0NTk2NzYwMDAwMA==39b1546fe2d969966a31bbc6b46371db");
+
+// Interface for category data
+interface CategoryData {
+  id: string;
+  name: string;
+  color: string;
+  isFullWidth: boolean;
+}
 
 const PanelboardGrid: React.FC = () => {
   const gridRef = useRef<AgGridReact>(null);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [columnApi, setColumnApi] = useState<ColumnApi | null>(null);
   const [quickFilter, setQuickFilter] = useState('');
-  const [rowData, setRowData] = useState(panelboardData);
+  const [rowData, setRowData] = useState<any[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
+  
+  // Process data to include category headers
+  useEffect(() => {
+    const categories = [
+      { id: 'circuit-breakers', name: 'Circuit Breakers (MCB, MCCB, ACB)', color: '#E5DEFF', filterValue: 'Circuit Breaker' },
+      { id: 'rcd', name: 'Residual Current Devices (RCD, RCCB, RCBO)', color: '#D3E4FD', filterValue: 'RCD' },
+      { id: 'fuse-links', name: 'Fuse Links', color: '#FDE1D3', filterValue: 'Fuse' },
+      { id: 'contactors', name: 'Contactors', color: '#F2FCE2', filterValue: 'Contactor' },
+      { id: 'overload-relays', name: 'Overload Relays', color: '#FEF7CD', filterValue: 'Relay' },
+      { id: 'timers', name: 'Timers', color: '#FFDEE2', filterValue: 'Timer' },
+      { id: 'push-buttons', name: 'Push Buttons & Selector Switches', color: '#F1F0FB', filterValue: 'Switch' },
+    ];
+
+    // Group the data by categories
+    const processedData: any[] = [];
+    
+    categories.forEach(category => {
+      // Add category header row
+      processedData.push({
+        id: category.id,
+        name: category.name,
+        isFullWidth: true,
+        color: category.color,
+      });
+      
+      // Add items for this category
+      const categoryItems = panelboardData.filter(item => 
+        item.type.includes(category.filterValue)
+      );
+      
+      processedData.push(...categoryItems);
+    });
+    
+    setRowData(processedData);
+  }, []);
   
   // Calculate total price whenever row data changes
   useEffect(() => {
     if (rowData) {
       const total = rowData.reduce((sum, row) => {
+        // Skip category headers
+        if (row.isFullWidth) return sum;
+        
         const quantity = row.quantity || 0;
         const price = row.price || 0;
         return sum + (quantity * price);
@@ -249,58 +297,73 @@ const PanelboardGrid: React.FC = () => {
     return result;
   }, [columnDefs]);
 
-  // Navigation sections
-  const sections = [
-    { id: 'main', name: 'Main Panel' },
-    { id: 'sub', name: 'Sub Panels' },
-    { id: 'distribution', name: 'Distribution' },
-    { id: 'lighting', name: 'Lighting' },
-    { id: 'custom', name: 'Custom' }
+  // Navigation categories
+  const categories = [
+    { id: 'circuit-breakers', name: 'Circuit Breakers', icon: <CircuitBoard className="mr-2" size={16} /> },
+    { id: 'rcd', name: 'RCDs', icon: <Shield className="mr-2" size={16} /> },
+    { id: 'fuse-links', name: 'Fuse Links', icon: <Link className="mr-2" size={16} /> },
+    { id: 'contactors', name: 'Contactors', icon: <Switch className="mr-2" size={16} /> },
+    { id: 'overload-relays', name: 'Relays', icon: <AlertTriangle className="mr-2" size={16} /> },
+    { id: 'timers', name: 'Timers', icon: <Clock className="mr-2" size={16} /> },
+    { id: 'push-buttons', name: 'Buttons & Switches', icon: <CircleDot className="mr-2" size={16} /> }
   ];
 
-  const navigateToSection = (sectionId: string) => {
+  // Function to determine if row is full width (category header)
+  const isFullWidthRow = (params: IsFullWidthRowParams) => {
+    return params.rowNode.data.isFullWidth;
+  };
+
+  // Full width row renderer for category headers
+  const fullWidthCellRenderer = (params: any) => {
+    const categoryData = params.data;
+    return (
+      <div 
+        className="flex items-center font-bold text-lg p-2" 
+        style={{ backgroundColor: categoryData.color, width: '100%' }}
+      >
+        {categoryData.name}
+      </div>
+    );
+  };
+
+  // Navigate to a specific category
+  const navigateToCategory = (categoryId: string) => {
     if (gridApi) {
-      const filterModel: any = {};
-      if (sectionId === 'main') {
-        filterModel.type = { 
-          type: 'equals', 
-          filter: 'Main'
-        };
-      } else if (sectionId === 'sub') {
-        filterModel.type = { 
-          type: 'equals', 
-          filter: 'Sub'
-        };
-      } else if (sectionId === 'distribution') {
-        filterModel.type = { 
-          type: 'equals', 
-          filter: 'Distribution'
-        };
-      } else if (sectionId === 'lighting') {
-        filterModel.type = { 
-          type: 'equals', 
-          filter: 'Lighting'
-        };
-      } else {
-        // Clear filter for custom
-        gridApi.setFilterModel(null);
-        return;
+      // Find the row index for the category
+      const rowNodes: any[] = [];
+      gridApi.forEachNode((node) => rowNodes.push(node));
+      
+      const categoryIndex = rowNodes.findIndex(node => 
+        node.data && node.data.id === categoryId
+      );
+      
+      if (categoryIndex >= 0) {
+        // Navigate to the category row
+        gridApi.ensureIndexVisible(categoryIndex);
+        
+        // Highlight the row (optional)
+        gridApi.clearFocusedCell();
+        
+        // Optionally select the row
+        gridApi.deselectAll();
+        gridApi.getDisplayedRowAtIndex(categoryIndex)?.setSelected(true);
       }
-      gridApi.setFilterModel(filterModel);
     }
   };
 
   return (
     <div className="flex flex-col w-full h-full">
-      <div className="mb-4 flex justify-between items-center">
-        <div className="flex space-x-2">
-          {sections.map((section) => (
+      <div className="mb-4 flex flex-wrap justify-between items-center gap-2">
+        <div className="flex flex-wrap gap-2">
+          {categories.map((category) => (
             <Button
-              key={section.id}
+              key={category.id}
               variant="outline"
-              onClick={() => navigateToSection(section.id)}
+              className="flex items-center"
+              onClick={() => navigateToCategory(category.id)}
             >
-              {section.name}
+              {category.icon}
+              {category.name}
             </Button>
           ))}
         </div>
@@ -331,6 +394,8 @@ const PanelboardGrid: React.FC = () => {
           paginationPageSizeSelector={[10, 15, 25, 50]}
           domLayout="autoHeight"
           onCellValueChanged={onCellValueChanged}
+          isFullWidthRow={isFullWidthRow}
+          fullWidthCellRenderer={fullWidthCellRenderer}
         />
       </div>
       
