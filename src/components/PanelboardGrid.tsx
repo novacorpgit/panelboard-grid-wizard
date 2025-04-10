@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -23,38 +22,36 @@ import { toast } from "@/components/ui/use-toast";
 // Set the AG Grid Enterprise license key
 LicenseManager.setLicenseKey("[TRIAL]_this_{AG_Charts_and_AG_Grid}_Enterprise_key_{AG-078795}_is_granted_for_evaluation_only___Use_in_production_is_not_permitted___Please_report_misuse_to_legal@ag-grid.com___For_help_with_purchasing_a_production_key_please_contact_info@ag-grid.com___You_are_granted_a_{Single_Application}_Developer_License_for_one_application_only___All_Front-End_JavaScript_developers_working_on_the_application_would_need_to_be_licensed___This_key_will_deactivate_on_{30 April 2025}____[v3]_[0102]_MTc0NTk2NzYwMDAwMA==39b1546fe2d969966a31bbc6b46371db");
 
-// Function to prepare tree data
-const prepareTreeData = (data: any[]) => {
-  // Group data by type for tree structure
-  const typeGroups: Record<string, any> = {};
-  
-  data.forEach(item => {
-    if (!typeGroups[item.type]) {
-      typeGroups[item.type] = {
-        productCode: item.type,
-        description: `${item.type} Components`,
-        type: 'Group',
-        children: []
-      };
-    }
-    
-    // Add a copy of the item to children array
-    typeGroups[item.type].children.push({...item});
-  });
-  
-  // Convert to array for grid
-  return Object.values(typeGroups);
-};
-
 const PanelboardGrid: React.FC = () => {
   const gridRef = useRef<AgGridReact>(null);
   const [gridApi, setGridApi] = useState<GridApi | null>(null);
   const [columnApi, setColumnApi] = useState<ColumnApi | null>(null);
   const [quickFilter, setQuickFilter] = useState('');
   
-  // Transform flat data to tree data
-  const treeData = useMemo(() => prepareTreeData(panelboardData), []);
-  const [rowData, setRowData] = useState(treeData);
+  // Transform data for tree structure
+  const rowData = useMemo(() => {
+    // Group data by type
+    const typeGroups: Record<string, any> = {};
+    
+    panelboardData.forEach(item => {
+      if (!typeGroups[item.type]) {
+        typeGroups[item.type] = {
+          productCode: item.type,
+          description: `${item.type} Components`,
+          type: 'Group',
+          children: []
+        };
+      }
+      
+      // Create a copy of the item with blank quantity
+      const itemCopy = {...item};
+      itemCopy.quantity = null; // Make quantity blank initially
+      typeGroups[item.type].children.push(itemCopy);
+    });
+    
+    // Convert to array for grid
+    return Object.values(typeGroups);
+  }, []);
   
   // Calculate totals
   const [totals, setTotals] = useState({
@@ -186,6 +183,11 @@ const PanelboardGrid: React.FC = () => {
       suppressCount: false,
     },
   }), []);
+
+  // This is the crucial function for tree data to work
+  const getDataPath = useCallback((data: any) => {
+    return data.type === 'Group' ? [data.productCode] : [data.type, data.productCode];
+  }, []);
 
   const onGridReady = (params: GridReadyEvent) => {
     setGridApi(params.api);
@@ -392,7 +394,7 @@ const PanelboardGrid: React.FC = () => {
           autoGroupColumnDef={autoGroupColumnDef}
           groupDefaultExpanded={1}
           treeData={true}
-          groupSelectsChildren={true}
+          getDataPath={getDataPath}
         />
       </div>
       
