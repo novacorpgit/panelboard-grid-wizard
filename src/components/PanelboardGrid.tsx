@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useMemo } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -24,8 +25,8 @@ const PanelboardGrid: React.FC = () => {
   // Define default columns
   const [columnDefs, setColumnDefs] = useState<(ColDef | ColGroupDef)[]>([
     { 
-      headerName: 'ID', 
-      field: 'id', 
+      headerName: 'Product Code', 
+      field: 'productCode', 
       sortable: true, 
       filter: true, 
       checkboxSelection: true,
@@ -64,24 +65,31 @@ const PanelboardGrid: React.FC = () => {
       flex: 1
     },
     { 
-      headerName: 'Status', 
-      field: 'status', 
+      headerName: 'Quantity', 
+      field: 'quantity', 
       sortable: true, 
-      filter: true,
+      filter: 'agNumberColumnFilter',
+      flex: 1
+    },
+    { 
+      headerName: 'Price ($)', 
+      field: 'price', 
+      sortable: true, 
+      filter: 'agNumberColumnFilter',
       flex: 1,
-      cellRenderer: (params: any) => {
-        const color = params.value === 'Active' ? 'bg-green-100 text-green-800' : 
-                     (params.value === 'Inactive' ? 'bg-red-100 text-red-800' : 
-                     'bg-yellow-100 text-yellow-800');
-        return <span className={`px-2 py-1 rounded-full text-xs font-medium ${color}`}>{params.value}</span>;
+      valueFormatter: (params: any) => {
+        return params.value ? `$${params.value.toFixed(2)}` : '';
       }
     },
     { 
-      headerName: 'Installation Date', 
-      field: 'installDate', 
+      headerName: 'Labor ($)', 
+      field: 'laborCharge', 
       sortable: true, 
-      filter: 'agDateColumnFilter',
-      flex: 1
+      filter: 'agNumberColumnFilter',
+      flex: 1,
+      valueFormatter: (params: any) => {
+        return params.value ? `$${params.value.toFixed(2)}` : '';
+      }
     }
   ]);
 
