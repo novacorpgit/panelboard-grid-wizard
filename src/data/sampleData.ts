@@ -1,4 +1,3 @@
-
 // Sample data for electrical low voltage panelboard components
 export const panelboardData = [
   {
@@ -280,5 +279,135 @@ export const panelboardData = [
     modelNumber: 'PSPD50',
     location: 'Critical Systems Panel',
     notes: 'Lightning protection'
+  },
+  {
+    productCode: "SDMS22KW",
+    description: "Star-Delta Motor Starter 22kW",
+    type: "Starter",
+    rating: 22,
+    poles: 3,
+    quantity: 1,
+    price: 650.00,
+    laborCharge: 120.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "SDMS-22KW",
+    location: "Motor Control Panel",
+    notes: "Standard star-delta starter"
+  },
+  {
+    productCode: "SDMS22KWSC",
+    description: "Star-Delta Motor Starter 22kW - With Sub components",
+    type: "Starter",
+    rating: 22,
+    poles: 3,
+    quantity: 1,
+    price: 1250.00,
+    laborCharge: 220.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "SDMS-22KW-SC",
+    location: "Motor Control Panel",
+    notes: "Star-Delta with all accessories"
+  }
+];
+
+// Sub-components for the starter (not in main array; for insertion as needed)
+export const starterSubComponents = [
+  {
+    productCode: "SD001-01",
+    description: "Main Contactor 50A AC3",
+    type: "Starter-Sub",
+    rating: 50,
+    poles: 3,
+    quantity: 1,
+    price: 195.00,
+    laborCharge: 25.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "LC1D50",
+    location: "Motor Control Panel",
+    notes: "Main line contactor"
+  },
+  {
+    productCode: "SD001-02",
+    description: "Star Contactor 32A AC3",
+    type: "Starter-Sub",
+    rating: 32,
+    poles: 3,
+    quantity: 1,
+    price: 120.00,
+    laborCharge: 20.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "LC1D32",
+    location: "Motor Control Panel",
+    notes: "For star connection"
+  },
+  {
+    productCode: "SD001-03",
+    description: "Delta Contactor 50A AC3",
+    type: "Starter-Sub",
+    rating: 50,
+    poles: 3,
+    quantity: 1,
+    price: 195.00,
+    laborCharge: 20.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "LC1D50",
+    location: "Motor Control Panel",
+    notes: "For delta connection"
+  },
+  {
+    productCode: "SD001-04",
+    description: "Timer Relay 0-30s",
+    type: "Starter-Sub",
+    rating: 0,
+    poles: 0,
+    quantity: 1,
+    price: 65.00,
+    laborCharge: 10.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "RE17RMMW",
+    location: "Motor Control Panel",
+    notes: "Star-delta timer"
+  },
+  {
+    productCode: "SD001-05",
+    description: "Thermal Overload Relay 30-50A",
+    type: "Starter-Sub",
+    rating: 50,
+    poles: 3,
+    quantity: 1,
+    price: 110.00,
+    laborCharge: 15.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "LRD3654",
+    location: "Motor Control Panel",
+    notes: "Motor overload protection"
+  },
+  {
+    productCode: "SD001-06",
+    description: "Control Circuit MCB 6A 1P",
+    type: "Starter-Sub",
+    rating: 6,
+    poles: 1,
+    quantity: 1,
+    price: 18.00,
+    laborCharge: 5.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "C60N 6A",
+    location: "Motor Control Panel",
+    notes: "Control supply breaker"
+  },
+  {
+    productCode: "SD001-07",
+    description: "Power Circuit MCB 63A 3P",
+    type: "Starter-Sub",
+    rating: 63,
+    poles: 3,
+    quantity: 1,
+    price: 55.00,
+    laborCharge: 8.00,
+    manufacturer: "Schneider Electric",
+    modelNumber: "C60N 63A/3P",
+    location: "Motor Control Panel",
+    notes: "Power circuit protection"
   }
 ];
