@@ -1,4 +1,3 @@
-
 import React, { useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
@@ -54,11 +53,6 @@ const getTreeData = () => {
 };
 
 const columnDefs = [
-  {
-    field: "description",
-    headerName: "Components",
-    flex: 2,
-  },
   { 
     field: "supplier", 
     headerName: "Supplier", 
