@@ -3,6 +3,8 @@ import React from 'react';
 import PanelboardGrid from '@/components/PanelboardGrid';
 
 const Index = () => {
+  const navigate = typeof window !== "undefined" ? (path: string) => window.location.pathname = path : () => {};
+
   return (
     <div className="min-h-screen bg-gray-50 p-4">
       <div className="max-w-7xl mx-auto">
@@ -13,6 +15,15 @@ const Index = () => {
           </p>
         </div>
         
+        <div className="flex mb-6 gap-4">
+          <button
+            onClick={() => navigate("/stardelta-tree")}
+            className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-800"
+          >
+            View Star-Delta Starter Tree Grid
+          </button>
+        </div>
+
         <div className="bg-white p-6 rounded-lg shadow-md">
           <PanelboardGrid />
         </div>
