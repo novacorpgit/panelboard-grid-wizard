@@ -29,11 +29,11 @@ const CSVUploader = () => {
         setRowData(results.data);
 
         try {
-          // Store in Supabase
+          // Store in Supabase - fix the JSON typing issue
           const { error } = await supabase.from('csv_uploads').insert({
             file_name: file.name,
-            headers: cols,
-            data: results.data
+            headers: cols as any,
+            data: results.data as any
           });
 
           if (error) throw error;
