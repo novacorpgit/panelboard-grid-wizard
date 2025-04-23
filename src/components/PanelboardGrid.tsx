@@ -283,17 +283,28 @@ const PanelboardGrid: React.FC = () => {
   ];
 
   const getDataPath = (data: any) => {
-    if (data.productCode && data.productCode.startsWith('SD001-')) {
-      return ["Star-Delta Motor Starter 22kW - With Sub components", data.description];
+    if (
+      data.productCode &&
+      data.productCode.startsWith("SD001-") &&
+      data.description
+    ) {
+      return [
+        "Star-Delta Motor Starter 22kW - With Sub components",
+        data.description,
+      ];
     }
-    if (data.productCode === 'SDMS22KWSC') {
+    if (data.productCode === "SDMS22KWSC") {
       return ["Star-Delta Motor Starter 22kW - With Sub components"];
     }
     return [data.description];
   };
 
   const gridRowClassRules = {
-    "bg-yellow-200": (params: any) => params.data && params.data.type === "Starter-Sub",
+    "bg-yellow-200":
+      (params: any) =>
+        params.data &&
+        typeof params.data.productCode === "string" &&
+        params.data.productCode.startsWith("SD001-"),
   };
 
   const navigateToCategory = (categoryId: string) => {
