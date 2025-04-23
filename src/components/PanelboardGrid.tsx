@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -39,6 +40,7 @@ const PanelboardGrid: React.FC = () => {
   const [totalPrice, setTotalPrice] = useState(0);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
   const [highlightedRows, setHighlightedRows] = useState<string[]>([]);
+  const [expandedStarDelta, setExpandedStarDelta] = useState<Record<string, boolean>>({});
 
   const categories: CategoryData[] = [
     { id: 'circuit-breakers', name: 'Circuit Breakers (MCB, MCCB, ACB)', color: '#E5DEFF', filterValue: 'Main' },
