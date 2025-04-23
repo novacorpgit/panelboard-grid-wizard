@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useCallback, useMemo, useEffect } from 'react';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/styles/ag-grid.css';
@@ -16,7 +17,7 @@ import {
 import { LicenseManager } from 'ag-grid-enterprise';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { panelboardData } from '@/data/sampleData';
+import { panelboardData, starterSubComponents } from '@/data/sampleData';
 import { Badge } from "@/components/ui/badge";
 import { toast } from "@/components/ui/use-toast";
 import { CircuitBoard, Shield, Link, ToggleLeft, AlertTriangle, Clock, CircleDot } from 'lucide-react';
@@ -38,6 +39,8 @@ const PanelboardGrid: React.FC = () => {
   const [rowData, setRowData] = useState<any[]>([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [activeFilter, setActiveFilter] = useState<string | null>(null);
+  const [highlightedRows, setHighlightedRows] = useState<string[]>([]);
+  const [expandedStarDelta, setExpandedStarDelta] = useState<Record<string, boolean>>({});
 
   const categories: CategoryData[] = [
     { id: 'circuit-breakers', name: 'Circuit Breakers (MCB, MCCB, ACB)', color: '#E5DEFF', filterValue: 'Main' },
@@ -50,24 +53,66 @@ const PanelboardGrid: React.FC = () => {
   ];
 
   useEffect(() => {
-    setRowData(panelboardData);
-    console.log("Panelboard tree data:", panelboardData);
-  }, []);
+    const processedData: any[] = [];
+    categories.forEach(category => {
+      processedData.push({
+        id: category.id,
+        name: category.name,
+        isFullWidth: true,
+        color: category.color,
+      });
+
+      const categoryItems = panelboardData.filter(item => 
+        item.type === category.filterValue
+      );
+      if (categoryItems.length > 0) {
+        processedData.push(...categoryItems);
+      } else {
+        const sampleItems = panelboardData.slice(0, 2);
+        processedData.push(...sampleItems.map(item => ({
+          ...item, 
+          type: category.filterValue
+        })));
+      }
+    });
+
+    const starterItems = panelboardData.filter(item => item.type === "Starter");
+    if (starterItems.length) {
+      processedData.push({
+        id: "starters",
+        name: "Star-Delta Starters",
+        isFullWidth: true,
+        color: "#D7F9FF"
+      });
+      processedData.push(...starterItems);
+      starterItems.forEach(starter => {
+        if (expandedStarDelta[starter.productCode]) {
+          if (starter.productCode === "SDMS22KWSC") {
+            starterSubComponents.forEach((sub, idx) => {
+              processedData.push({
+                ...sub,
+                _isSubComponent: true,
+              });
+            });
+          }
+        }
+      });
+    }
+
+    setRowData(processedData);
+    console.log("Processed row data:", processedData);
+  }, [expandedStarDelta]);
 
   useEffect(() => {
     if (rowData) {
-      const calculateSum = (data: any[]): number => {
-        let sum = 0;
-        for (const item of data) {
-          if (item.children && item.children.length > 0) {
-            sum += calculateSum(item.children);
-          } else if (item.quantity && item.price) {
-            sum += item.quantity * item.price;
-          }
-        }
-        return sum;
-      };
-      setTotalPrice(calculateSum(rowData));
+      const total = rowData.reduce((sum, row) => {
+        if (row.isFullWidth) return sum;
+        
+        const quantity = row.quantity || 0;
+        const price = row.price || 0;
+        return sum + (quantity * price);
+      }, 0);
+      setTotalPrice(total);
     }
   }, [rowData]);
 
@@ -79,8 +124,7 @@ const PanelboardGrid: React.FC = () => {
       filter: true, 
       checkboxSelection: true,
       headerCheckboxSelection: true,
-      pinned: 'left',
-      width: 150
+      pinned: 'left'
     },
     { 
       headerName: 'Description', 
@@ -282,35 +326,20 @@ const PanelboardGrid: React.FC = () => {
     { id: 'push-buttons', name: 'Buttons & Switches', icon: <CircleDot className="mr-2" size={16} /> }
   ];
 
-  // ---- 1. Replace getDataPath for generic children tree ----
-  // Let ag-Grid treeData use the "children" property directly.
-  // Fallback to [description] if no parent, otherwise nested.
-  const getDataPath = (data: any) => {
-    // For the "Star-Delta Motor Starter 22kW - With Sub components" group and its children, use a path:
-    // [Parent description, (Child description if children)]
-    if (data.children && Array.isArray(data.children) && data.children.length > 0) {
-      // Parent
-      return [data.description];
-    }
-    // Child detection: check if data has a parent with description "Star-Delta Motor Starter 22kW - With Sub components"
-    if (
-      typeof data.productCode === "string" &&
-      data.productCode.startsWith("SD001-") &&
-      data.description
-    ) {
-      // Path: [parent, child]
-      return ["Star-Delta Motor Starter 22kW - With Sub components", data.description];
-    }
-    // All other rows: return [description]
-    return [data.description];
+  const isFullWidthRow = (params: IsFullWidthRowParams) => {
+    return params.rowNode.data.isFullWidth;
   };
 
-  const gridRowClassRules = {
-    "bg-yellow-200":
-      (params: any) =>
-        params.data &&
-        typeof params.data.productCode === "string" &&
-        params.data.productCode.startsWith("SD001-"),
+  const fullWidthCellRenderer = (params: any) => {
+    const categoryData = params.data;
+    return (
+      <div 
+        className="flex items-center font-bold text-lg p-2" 
+        style={{ backgroundColor: categoryData.color, width: '100%' }}
+      >
+        {categoryData.name}
+      </div>
+    );
   };
 
   const navigateToCategory = (categoryId: string) => {
@@ -356,6 +385,20 @@ const PanelboardGrid: React.FC = () => {
   };
 
   const onRowClicked = (event: any) => {
+    if (event.data && event.data.productCode === "SDMS22KWSC") {
+      if (!expandedStarDelta["SDMS22KWSC"]) {
+        setExpandedStarDelta(prev => ({ ...prev, SDMS22KWSC: true }));
+        setHighlightedRows(starterSubComponents.map(sub => sub.productCode));
+        toast({
+          title: "Sub Components Added",
+          description: "Sub components for Star-Delta Motor Starter 22kW added and highlighted.",
+        });
+      }
+    }
+  };
+
+  const gridRowClassRules = {
+    "bg-yellow-200": (params: any) => !!params.data && params.data._isSubComponent,
   };
 
   return (
@@ -410,9 +453,9 @@ const PanelboardGrid: React.FC = () => {
           paginationPageSizeSelector={[10, 15, 25, 50]}
           domLayout="autoHeight"
           onCellValueChanged={onCellValueChanged}
-          treeData={true}
-          getDataPath={getDataPath}
-          groupDefaultExpanded={-1}
+          isFullWidthRow={isFullWidthRow}
+          fullWidthCellRenderer={fullWidthCellRenderer}
+          onRowClicked={onRowClicked}
           rowClassRules={gridRowClassRules}
         />
       </div>
