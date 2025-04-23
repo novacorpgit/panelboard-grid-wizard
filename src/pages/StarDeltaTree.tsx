@@ -1,9 +1,10 @@
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { useNavigate } from "react-router-dom";
+import { Card } from "@/components/ui/card";
 
 const mainComponent = {
   productCode: "SDMS22KWSC",
@@ -14,7 +15,6 @@ const mainComponent = {
   type: "Motor Starter",
 };
 
-// Subcomponents data for tree hierarchy
 const subComponents = [
   {
     productCode: "SD001-01",
@@ -138,7 +138,7 @@ const subComponents = [
   },
 ];
 
-// Prepare tree data structure
+// Return tree data
 const getTreeData = () => [
   {
     ...mainComponent,
@@ -167,6 +167,21 @@ const autoGroupColumnDef = {
 const StarDeltaTree = () => {
   const gridRef = useRef(null);
   const navigate = useNavigate();
+  const [selected, setSelected] = useState<any>(null);
+
+  const onSelectionChanged = () => {
+    const gridApi = gridRef.current && (gridRef.current as any).api;
+    if (gridApi) {
+      const selectedNodes = gridApi.getSelectedNodes();
+      setSelected(selectedNodes.length > 0 ? selectedNodes[0].data : null);
+    }
+  };
+
+  // Find children for selected node (if any)
+  const getChildren = (data: any) => {
+    if (!data) return [];
+    return data.children || [];
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-4">
@@ -197,14 +212,59 @@ const StarDeltaTree = () => {
             treeData={true}
             groupDefaultExpanded={1}
             getDataPath={(data: any) =>
-              data.children ? [data.description] : [mainComponent.description, data.description]
+              data.children
+                ? [data.description]
+                : [mainComponent.description, data.description]
             }
             autoGroupColumnDef={autoGroupColumnDef}
             suppressRowClickSelection={true}
             animateRows={true}
             domLayout="autoHeight"
+            rowSelection="single"
+            onSelectionChanged={onSelectionChanged}
           />
         </div>
+        {selected && (
+          <Card className="mt-8 p-6 bg-white shadow-md">
+            <div className="font-semibold mb-2 text-lg text-blue-800">
+              {selected.description}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+              <div>
+                <span className="font-medium">Product Code:</span> {selected.productCode}
+              </div>
+              <div>
+                <span className="font-medium">Model:</span> {selected.modelNumber}
+              </div>
+              <div>
+                <span className="font-medium">Manufacturer:</span> {selected.manufacturer}
+              </div>
+              {selected.function && (
+                <div>
+                  <span className="font-medium">Function:</span> {selected.function}
+                </div>
+              )}
+              {selected.category && (
+                <div>
+                  <span className="font-medium">Category:</span> {selected.category}
+                </div>
+              )}
+            </div>
+            {/* Show subitems if any */}
+            {getChildren(selected).length > 0 && (
+              <div className="mt-4">
+                <span className="font-semibold">Sub-components:</span>
+                <ul className="list-disc ml-8">
+                  {getChildren(selected).map((item: any) => (
+                    <li key={item.productCode} className="mt-1">
+                      {item.description} ({item.productCode})
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </Card>
+        )}
       </div>
     </div>
   );
