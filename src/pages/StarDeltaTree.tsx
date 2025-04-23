@@ -1,14 +1,14 @@
 
-import React, { useRef, useState } from "react";
+import React, { useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import "ag-grid-community/styles/ag-grid.css";
 import "ag-grid-community/styles/ag-theme-alpine.css";
 import { useNavigate } from "react-router-dom";
-import { Card } from "@/components/ui/card";
 
 const mainComponent = {
   productCode: "SDMS22KWSC",
   description: "Star-Delta Motor Starter 22kW - With Sub components",
+  supplier: "Schneider Electric",
   qty: 1,
 };
 
@@ -16,28 +16,31 @@ const subComponents = [
   {
     productCode: "SD001-01",
     description: "Main Contactor 50A AC3",
+    supplier: "Schneider Electric",
     qty: 1,
   },
   {
     productCode: "SD001-02",
     description: "Star Contactor 32A AC3",
+    supplier: "Schneider Electric", 
     qty: 1,
   },
   {
     productCode: "SD001-03",
     description: "Delta Contactor 50A AC3",
+    supplier: "Schneider Electric",
     qty: 1,
   },
   {
     productCode: "SD001-04",
     description: "Timer Relay 0-30s",
+    supplier: "Schneider Electric",
     qty: 1,
-  },
+  }
 ];
 
-// Flattened tree data for AG Grid's treeData feature
 const getTreeData = () => {
-  const data = [
+  return [
     {
       ...mainComponent,
       path: [mainComponent.description],
@@ -45,10 +48,9 @@ const getTreeData = () => {
     ...subComponents.map((sub) => ({
       ...sub,
       path: [mainComponent.description, sub.description],
-      qty: mainComponent.qty, // Each subcomponent qty matches main component
+      qty: mainComponent.qty,
     })),
   ];
-  return data;
 };
 
 const columnDefs = [
@@ -57,7 +59,16 @@ const columnDefs = [
     headerName: "Components",
     flex: 2,
   },
-  { field: "productCode", headerName: "Code", flex: 1 },
+  { 
+    field: "supplier", 
+    headerName: "Supplier", 
+    flex: 1 
+  },
+  { 
+    field: "productCode", 
+    headerName: "Code", 
+    flex: 1 
+  },
   { 
     field: "qty", 
     headerName: "Qty", 
