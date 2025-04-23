@@ -138,20 +138,36 @@ const subComponents = [
   },
 ];
 
-// Return tree data
-const getTreeData = () => [
-  {
-    ...mainComponent,
-    children: subComponents,
-  },
-];
+// Flattened tree data for AG Grid's treeData feature
+const getTreeData = () => {
+  const data = [
+    {
+      ...mainComponent,
+      function: undefined,
+      category: undefined,
+      path: [mainComponent.description],
+      // No parent for main node
+    },
+    ...subComponents.map((sub) => ({
+      ...sub,
+      path: [mainComponent.description, sub.description],
+      // Each subcomponent is a child under the main component
+    })),
+  ];
+  return data;
+};
 
 const columnDefs = [
-  { field: "description", headerName: "Description", flex: 2 },
+  {
+    field: "description",
+    headerName: "Component / Sub-Component",
+    flex: 2,
+    // AG Grid tree icon & expand/collapse will appear here
+  },
   { field: "productCode", headerName: "Code", flex: 1 },
   { field: "modelNumber", headerName: "Model", flex: 1 },
   { field: "manufacturer", headerName: "Manufacturer", flex: 1.5 },
-  { field: "function", headerName: "Function", flex: 1, hide: false },
+  { field: "function", headerName: "Function", flex: 1 },
   { field: "category", headerName: "Category", flex: 1 },
 ];
 
@@ -169,6 +185,7 @@ const StarDeltaTree = () => {
   const navigate = useNavigate();
   const [selected, setSelected] = useState<any>(null);
 
+  // Selection logic to find the selected node
   const onSelectionChanged = () => {
     const gridApi = gridRef.current && (gridRef.current as any).api;
     if (gridApi) {
@@ -177,10 +194,16 @@ const StarDeltaTree = () => {
     }
   };
 
-  // Find children for selected node (if any)
+  // Find direct children of selected node based on the data's path
   const getChildren = (data: any) => {
-    if (!data) return [];
-    return data.children || [];
+    if (!data || !data.path) return [];
+    const dataPath = data.path;
+    // Only return direct children (one level deeper)
+    return getTreeData().filter(
+      (item) =>
+        item.path.length === dataPath.length + 1 &&
+        item.path.slice(0, dataPath.length).join("/") === dataPath.join("/")
+    );
   };
 
   return (
@@ -211,11 +234,7 @@ const StarDeltaTree = () => {
             columnDefs={columnDefs}
             treeData={true}
             groupDefaultExpanded={1}
-            getDataPath={(data: any) =>
-              data.children
-                ? [data.description]
-                : [mainComponent.description, data.description]
-            }
+            getDataPath={(data: any) => data.path}
             autoGroupColumnDef={autoGroupColumnDef}
             suppressRowClickSelection={true}
             animateRows={true}
@@ -271,3 +290,4 @@ const StarDeltaTree = () => {
 };
 
 export default StarDeltaTree;
+
