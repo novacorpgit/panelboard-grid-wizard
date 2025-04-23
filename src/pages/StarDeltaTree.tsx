@@ -54,9 +54,9 @@ const getTreeData = () => {
 };
 
 const columnDefs = [
-  { 
-    field: "description", 
-    headerName: "", 
+  {
+    field: "description",
+    headerName: "Components",
     flex: 2,
   },
   { 
@@ -91,7 +91,7 @@ const columnDefs = [
 ];
 
 const autoGroupColumnDef = {
-  headerName: "",
+  headerName: "Components",
   field: "description",
   cellRendererParams: {
     suppressCount: true,
