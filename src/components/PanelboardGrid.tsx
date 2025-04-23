@@ -282,20 +282,26 @@ const PanelboardGrid: React.FC = () => {
     { id: 'push-buttons', name: 'Buttons & Switches', icon: <CircleDot className="mr-2" size={16} /> }
   ];
 
+  // ---- 1. Replace getDataPath for generic children tree ----
+  // Let ag-Grid treeData use the "children" property directly.
+  // Fallback to [description] if no parent, otherwise nested.
   const getDataPath = (data: any) => {
+    // For the "Star-Delta Motor Starter 22kW - With Sub components" group and its children, use a path:
+    // [Parent description, (Child description if children)]
+    if (data.children && Array.isArray(data.children) && data.children.length > 0) {
+      // Parent
+      return [data.description];
+    }
+    // Child detection: check if data has a parent with description "Star-Delta Motor Starter 22kW - With Sub components"
     if (
-      data.productCode &&
+      typeof data.productCode === "string" &&
       data.productCode.startsWith("SD001-") &&
       data.description
     ) {
-      return [
-        "Star-Delta Motor Starter 22kW - With Sub components",
-        data.description,
-      ];
+      // Path: [parent, child]
+      return ["Star-Delta Motor Starter 22kW - With Sub components", data.description];
     }
-    if (data.productCode === "SDMS22KWSC") {
-      return ["Star-Delta Motor Starter 22kW - With Sub components"];
-    }
+    // All other rows: return [description]
     return [data.description];
   };
 
