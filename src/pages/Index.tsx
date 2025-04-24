@@ -23,6 +23,12 @@ const Index = () => {
           >
             View Star-Delta Starter Tree Grid
           </button>
+          <button
+            onClick={() => navigate("/components-upload")}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            Upload Components Data
+          </button>
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md mb-6">

@@ -7,6 +7,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import StarDeltaTree from "./pages/StarDeltaTree";
+import ComponentsUpload from "./pages/ComponentsUpload";
 
 const queryClient = new QueryClient();
 
@@ -19,7 +20,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/stardelta-tree" element={<StarDeltaTree />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          <Route path="/components-upload" element={<ComponentsUpload />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
