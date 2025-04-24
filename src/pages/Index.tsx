@@ -1,7 +1,6 @@
 
 import React from 'react';
 import PanelboardGrid from '@/components/PanelboardGrid';
-import CSVUploader from '@/components/CSVUploader';
 
 const Index = () => {
   const navigate = typeof window !== "undefined" ? (path: string) => window.location.pathname = path : () => {};
@@ -23,11 +22,6 @@ const Index = () => {
           >
             View Star-Delta Starter Tree Grid
           </button>
-        </div>
-
-        <div className="bg-white p-6 rounded-lg shadow-md mb-6">
-          <h2 className="text-xl font-semibold mb-4">Upload Data</h2>
-          <CSVUploader />
         </div>
 
         <div className="bg-white p-6 rounded-lg shadow-md">
